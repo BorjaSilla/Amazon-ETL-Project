@@ -47,5 +47,5 @@ div_element = driver.find_element(By.CLASS_NAME, "_p13n-zg-nav-tree-all_style_zg
 link_elements = div_element.find_elements(By.TAG_NAME, 'a')
 links = [link.get_attribute('href') for link in link_elements]
 
-print(links)
+
 driver.quit()
