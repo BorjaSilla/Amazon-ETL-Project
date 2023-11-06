@@ -21,9 +21,11 @@ def scrape_amazon_url(url, num_pages):
 
     # Create a CSV file and write the header only once
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-        fieldnames = ['rank', 'asin', 'title', 'price', 'rating', 'num_reviews', 'img_link']
+        fieldnames = ['asin', 'title', 'price', 'rating', 'num_reviews', 'img_link']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
+
+    counter_page = 1
 
     for page in range(num_pages):
         time.sleep(2)  # Add a delay if needed
@@ -51,11 +53,21 @@ def scrape_amazon_url(url, num_pages):
         # Find product container and save it
         caja_productos = driver.find_elements(By.CLASS_NAME, 'a-cardui._cDEzb_grid-cell_1uMOS.expandableGrid.p13n-grid-content')
 
-        # Data Extraction
-        rank = [int(i.text.split('\n')[0].split('#')[1]) for i in caja_productos]
-        print(rank)
-        titulos = [i.text.split('\n')[1] for i in caja_productos]
-        print(titulos)
+
+
+
+
+
+        title = []
+        #titulos = [i.text.split('\n')[1] for i in caja_productos]
+        titles = driver.find_elements(By.CLASS_NAME, "_cDEzb_p13n-sc-css-line-clamp-3_g3dy1")
+
+        for i in titles:
+            title.append(i.text)
+            print(i.text)
+
+
+
 
         precio = []
         ratings = []
@@ -81,13 +93,16 @@ def scrape_amazon_url(url, num_pages):
                 num_reviews.append(0)  # Handle cases where the item doesn't have the expected structure
 
 
-        for e in caja_productos:
+
+        price_element = driver.find_elements(By.CSS_SELECTOR, ".a-size-base.a-color-price ._cDEzb_p13n-sc-price_3mJ9Z")
+
+        for i in price_element:
             try:
-                precio_text = e.text.split('\n')[4]
-                precio_value = float(precio_text.split()[0].replace(',', '.'))
+                precio_value = i.text.split()[0].replace(',', '.')
                 precio.append(precio_value)
             except:
                 precio.append(0)
+
 
 
         for product in caja_productos:
@@ -117,12 +132,11 @@ def scrape_amazon_url(url, num_pages):
         asin = [i.get_attribute('data-asin') for i in asin_elements]
 
         # CHECK LEN OF EXTRACTED VALUES (SHOULD = 50)
-        print('rank', len(rank), 'asin', len(asin), 'title', len(titulos), 'precio', len(precio), 'ratings', len(ratings), 'num_reviews', len(num_reviews), 'image links', len(image_links))
+        #print('rank', len(rank), 'asin', len(asin), 'title', len(titulos), 'precio', len(precio), 'ratings', len(ratings), 'num_reviews', len(num_reviews), 'image links', len(image_links))
 
         # Create a list of dictionaries for the current page's data
         page_data = [
             {
-                'rank': r,
                 'asin' : a,
                 'title': t,
                 'price': p,
@@ -130,7 +144,7 @@ def scrape_amazon_url(url, num_pages):
                 'num_reviews': nr,
                 'img_link': il
             }
-            for r, a, t, p, rt, nr, il in zip(rank, asin, titulos, precio, ratings_float, num_reviews, image_links)
+            for a, t, p, rt, nr, il in zip(asin, title, precio, ratings_float, num_reviews, image_links)
         ]
 
         # Append data to the CSV file

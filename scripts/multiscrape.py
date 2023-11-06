@@ -23,7 +23,7 @@ def scrape_single_link(link):
 
 if __name__ == '__main__':
     # Number of processes to create (you can adjust this as needed)
-    num_processes = 2
+    num_processes = 8
 
     # Create a multiprocessing pool to run the scraping function in parallel
     with multiprocessing.Pool(num_processes) as pool:
