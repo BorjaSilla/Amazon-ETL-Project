@@ -2,9 +2,12 @@ import time
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import csv
 import re
 import os
+
 
 def scrape_amazon_url(url, num_pages):
 
@@ -30,7 +33,7 @@ def scrape_amazon_url(url, num_pages):
     for page in range(num_pages):
         time.sleep(2)  # Add a delay if needed
 
-        # Close cookies popup - if needed
+        # Close cookies popup - if needed, if not proceed
         try:
             driver.find_element(By.XPATH, '//*[@id="sp-cc-accept"]').click()
             print('Cookies Accepted, starting scrape...')
@@ -39,7 +42,9 @@ def scrape_amazon_url(url, num_pages):
         except:
             print("Cookies not needed")
             print(f'Scraping {category_name} Top 100 ----------------------------------------- page: {counter}')
+        time.sleep(1)
 
+        # SCROLL TO THE END OF THE PAGE
         last_height = driver.execute_script("return document.body.scrollHeight")
         while True:
             driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -49,61 +54,56 @@ def scrape_amazon_url(url, num_pages):
                 break
             last_height = new_height
 
+        time.sleep(2)
 
-        # Find product container and save it
-        caja_productos = driver.find_elements(By.CLASS_NAME, 'a-cardui._cDEzb_grid-cell_1uMOS.expandableGrid.p13n-grid-content')
+        wait = WebDriverWait(driver, 20)  # Adjust the timeout as needed
+        caja_productos = wait.until(EC.presence_of_all_elements_located((By.CLASS_NAME, 'a-cardui._cDEzb_grid-cell_1uMOS.expandableGrid.p13n-grid-content')))
+        print('The length of caja productos is:',len(caja_productos))
+        
 
-
-
-
-
-
-        title = []
-        #titulos = [i.text.split('\n')[1] for i in caja_productos]
-        titles = driver.find_elements(By.CLASS_NAME, "_cDEzb_p13n-sc-css-line-clamp-3_g3dy1")
-
-        for i in titles:
-            title.append(i.text)
-            print(i.text)
-
-
-
-
-        precio = []
-        ratings = []
-        ratings_float = []
-        num_reviews = []  
-
-        for item in caja_productos:
-            item_text = item.text.split('\n')
-
-            # Check if the item has the expected number of elements
-            if len(item_text) >= 4:
-                review_text = item_text[3]  # Extract the review text
-
-                if review_text.strip():  # Check if the review text is not empty
-                    numeric_review = re.sub(r'[^\d]', '', review_text)  # Remove non-numeric characters
-                    if numeric_review:  # Check if the cleaned string is not empty
-                        num_reviews.append(int(numeric_review))  # Convert the cleaned string to an integer
-                    else:
-                        num_reviews.append(0)  # Set a default value to indicate no reviews
-                else:
-                    num_reviews.append(0)  # If the review text is empty, set the number of reviews to 0
-            else:
-                num_reviews.append(0)  # Handle cases where the item doesn't have the expected structure
-
-
-
-        price_element = driver.find_elements(By.CSS_SELECTOR, ".a-size-base.a-color-price ._cDEzb_p13n-sc-price_3mJ9Z")
-
-        for i in price_element:
+        n_of_reviews = []
+        # Extract the number of reviews for each element
+        for producto in caja_productos:
             try:
-                precio_value = i.text.split()[0].replace(',', '.')
-                precio.append(precio_value)
+                reviews_element = producto.find_element(By.CSS_SELECTOR, 'a[class="a-link-normal"] span.a-size-small')
+                number_of_reviews = reviews_element.text
+                n_of_reviews.append(number_of_reviews)
             except:
-                precio.append(0)
+                n_of_reviews.append(0)
 
+        # Create a list to store the titles
+        titles = []
 
+        for producto in caja_productos:
+            try:
+                # Find the title element using XPath
+                title_element = producto.find_element(By.XPATH, './/a[contains(@class, "a-link-normal")]/div[contains(@class, "a-section")]/img[contains(@class, "a-dynamic-image")]')
+                
+                # Extract the title text from the "alt" attribute of the image
+                title_text = title_element.get_attribute('alt')
+                
+                if title_text:  # Check if the title is not empty
+                    titles.append(title_text)
+            except Exception as e:
+                print(f"Error while extracting title: {e}")
+
+            
+
+        ratings = []
+        ratings_float = []   
+        prices = []  # Initialize an empty list to store prices
+ 
+        for product in caja_productos:
+            try:
+                price_element = product.find_element(By.CSS_SELECTOR, ".a-size-base.a-color-price ._cDEzb_p13n-sc-price_3mJ9Z")
+                price_text = price_element.text
+                # Clean the price text (remove currency symbol and replace comma with dot)
+                price_text = price_text.replace('€', '').replace(',', '.').strip()
+                prices.append(price_text)
+            except:
+                prices.append('0')  # Append '0' when the price selector is not found for a product
+        
+        # RATING EXTRACTION AND CLEANING
 
         for product in caja_productos:
             try:
@@ -132,7 +132,7 @@ def scrape_amazon_url(url, num_pages):
         asin = [i.get_attribute('data-asin') for i in asin_elements]
 
         # CHECK LEN OF EXTRACTED VALUES (SHOULD = 50)
-        #print('rank', len(rank), 'asin', len(asin), 'title', len(titulos), 'precio', len(precio), 'ratings', len(ratings), 'num_reviews', len(num_reviews), 'image links', len(image_links))
+        print('asin', len(asin), 'title', len(titles), 'precio', len(prices), 'ratings', len(ratings), 'num_reviews', len(n_of_reviews), 'image links', len(image_links))
 
         # Create a list of dictionaries for the current page's data
         page_data = [
@@ -144,7 +144,7 @@ def scrape_amazon_url(url, num_pages):
                 'num_reviews': nr,
                 'img_link': il
             }
-            for a, t, p, rt, nr, il in zip(asin, title, precio, ratings_float, num_reviews, image_links)
+            for a, t, p, rt, nr, il in zip(asin, titles, prices, ratings_float, n_of_reviews, image_links)
         ]
 
         # Append data to the CSV file

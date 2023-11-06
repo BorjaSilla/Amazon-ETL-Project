@@ -10,8 +10,6 @@ from scrape_links import links
 from scrape import scrape_amazon_url
 
 
-
-
 # Function to scrape a single link
 def scrape_single_link(link):
     # Modify this function to call scrape_amazon_url for a single link
@@ -23,7 +21,7 @@ def scrape_single_link(link):
 
 if __name__ == '__main__':
     # Number of processes to create (you can adjust this as needed)
-    num_processes = 8
+    num_processes = 3
 
     # Create a multiprocessing pool to run the scraping function in parallel
     with multiprocessing.Pool(num_processes) as pool:
