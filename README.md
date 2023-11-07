@@ -7,7 +7,7 @@ This project involves scraping data from Amazon's product listings, using Seleni
 ## Project Structure
 
 - `scrape.py`: Python script for web scraping using Selenium.
-- `scrape_links.py`: Script for extraction of the links of all the categorie's top 100 products.
+- `scrape_links.py`: Script for extracting the links of all the category's top 100 products in Amazon ES marketplace.
 - `multiscrape.py`: The multiprocessing version to scrape more efficiently with parallel processes.
 - `scrape_data`: A folder containing scraped data per category in `CSV` format.
 - `README.md`: Project documentation (this file).
@@ -33,20 +33,15 @@ This project involves scraping data from Amazon's product listings, using Seleni
 
 ### 4. Storing Data in CSV Files
 
-- CSV files are created to store the cleaned data with a format string to save the file with the name of the category.
+- CSV files are created to store the cleaned data with a format string to save the file with the category's name.
 - Each CSV file may represent data from a specific Amazon category.
 - The cleaned data is written to the CSV files using Python's CSV-writing libraries.
 
-### 5. Further Steps
+### 5. Data Transformation
 
-- With the data now in CSV files, I proceeded to enrinch the data with a dataset.
+- Merged all `CSV` files into one master data frame and added a new column `category` to keep track of it in the merged data.
+- Some insights with matplotlib
 
-#### Example Further Steps:
+### 6. Storing Data in MongoDB
 
-- **Data Analysis**: Utilize data analysis tools like Pandas and Jupyter to gain insights from the data.
-- **Machine Learning**: Explore machine learning models for predictions based on the Amazon data.
-- **Scheduled Updates**: Implement a scheduler for periodic data re-scraping to keep the dataset up-to-date.
-- **API Development**: Create an API to expose the data for external applications or integration with other services.
-- **Data Export**: Consider exporting the data to databases, data lakes, or cloud storage for long-term storage and scalability.
-
-Remember to document your work thoroughly, including your scraping and data cleaning code. Ensure compliance with web scraping ethics and respect Amazon's terms of service to avoid any legal issues.
+- Stored transformed data in MongoDB.
