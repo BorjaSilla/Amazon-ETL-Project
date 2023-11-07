@@ -1,3 +1,5 @@
+![ETL](https://www.infobelpro.com/hs-fs/hubfs/ETL.png?width=840&height=420&name=ETL.png)
+
 # Amazon Web Scraping and ETL Project
 
 This project involves scraping data from Amazon's product listings, using Selenium for web scraping, and applying multiprocessing to speed up data extraction. After scraping, the data is cleaned and immediately stored in CSV files. The project's primary steps are as follows:
